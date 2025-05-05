@@ -1,225 +1,300 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowDown, ArrowUp, TrendingUp, User, ShoppingCart, CreditCard, Utensils, Clock, ArrowRight } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  LayoutDashboard,
-  Users,
-  ShoppingBag,
-  Utensils,
-  Wallet,
-  ArrowRight,
-  ArrowUp,
-  ArrowDown
-} from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { SectionTitle } from '@/components/ui/section-title';
 
-// Mock data for dashboard
-const statCards = [
+// بيانات إحصائية للعرض
+const statsData = [
   { 
-    title: 'users', 
-    value: '456', 
-    change: '+12%', 
-    changeType: 'positive', 
-    icon: <Users className="h-5 w-5" /> 
+    title: 'إجمالي المستخدمين',
+    value: 1240,
+    change: 12.5,
+    increasing: true,
+    icon: User,
+    color: 'bg-blue-500'
   },
   { 
-    title: 'orders', 
-    value: '235', 
-    change: '+18%', 
-    changeType: 'positive', 
-    icon: <ShoppingBag className="h-5 w-5" /> 
+    title: 'إجمالي الطلبات',
+    value: 856,
+    change: 8.2,
+    increasing: true,
+    icon: ShoppingCart,
+    color: 'bg-green-500'
   },
   { 
-    title: 'restaurants', 
-    value: '32', 
-    change: '+5%', 
-    changeType: 'positive', 
-    icon: <Utensils className="h-5 w-5" /> 
+    title: 'إجمالي المدفوعات',
+    value: '3,256 π',
+    change: 15.3,
+    increasing: true,
+    icon: CreditCard,
+    color: 'bg-purple-500'
   },
   { 
-    title: 'revenue', 
-    value: 'π 3,245', 
-    change: '-2%', 
-    changeType: 'negative', 
-    icon: <Wallet className="h-5 w-5" /> 
-  }
+    title: 'إجمالي المطاعم',
+    value: 58,
+    change: 4.1,
+    increasing: true,
+    icon: Utensils,
+    color: 'bg-orange'
+  },
 ];
 
+// بيانات الرسم البياني للإيرادات
+const revenueData = [
+  { name: 'يناير', revenue: 400 },
+  { name: 'فبراير', revenue: 300 },
+  { name: 'مارس', revenue: 550 },
+  { name: 'أبريل', revenue: 780 },
+  { name: 'مايو', revenue: 690 },
+  { name: 'يونيو', revenue: 850 },
+  { name: 'يوليو', revenue: 930 },
+];
+
+// بيانات الدائرة للطلبات
+const orderSourceData = [
+  { name: 'المطاعم', value: 65 },
+  { name: 'الطعام المنزلي', value: 35 },
+];
+
+const COLORS = ['#8B5CF6', '#F97316'];
+
+// بيانات الرسم البياني للأداء
+const performanceData = [
+  { name: 'الأحد', مطاعم: 20, منزلي: 12 },
+  { name: 'الإثنين', مطاعم: 25, منزلي: 15 },
+  { name: 'الثلاثاء', مطاعم: 30, منزلي: 18 },
+  { name: 'الأربعاء', مطاعم: 40, منزلي: 20 },
+  { name: 'الخميس', مطاعم: 35, منزلي: 22 },
+  { name: 'الجمعة', مطاعم: 50, منزلي: 30 },
+  { name: 'السبت', مطاعم: 60, منزلي: 35 },
+];
+
+// بيانات آخر الطلبات
 const recentOrders = [
-  { id: 'ORD-1234', customer: 'Ahmed M.', restaurant: 'Pyramid Pizza', total: 45.2, status: 'completed' },
-  { id: 'ORD-1235', customer: 'Sara A.', restaurant: 'Cairo Kebab', total: 32.75, status: 'processing' },
-  { id: 'ORD-1236', customer: 'Mohamed K.', restaurant: 'Nile Sushi', total: 65.3, status: 'processing' },
-  { id: 'ORD-1237', customer: 'Laila T.', restaurant: 'Alexandria Seafood', total: 28.9, status: 'cancelled' },
-  { id: 'ORD-1238', customer: 'Omar S.', restaurant: 'Tahrir Tacos', total: 18.5, status: 'completed' }
+  { id: '#OR9583', user: 'أحمد محمد', amount: '45.5 π', status: 'تم التسليم', time: 'منذ 35 دقيقة' },
+  { id: '#OR9582', user: 'سارة علي', amount: '22.3 π', status: 'قيد التحضير', time: 'منذ 45 دقيقة' },
+  { id: '#OR9581', user: 'محمد عبدالله', amount: '33.8 π', status: 'جاري التوصيل', time: 'منذ ساعة' },
+  { id: '#OR9580', user: 'فاطمة خالد', amount: '18.2 π', status: 'تم التسليم', time: 'منذ ساعتين' },
+  { id: '#OR9579', user: 'خالد محمود', amount: '27.9 π', status: 'تم التسليم', time: 'منذ 3 ساعات' },
 ];
 
-const AdminDashboard = () => {
-  const { t } = useLanguage();
+const AdminDashboard: React.FC = () => {
+  const [progress, setProgress] = useState(0);
+  
+  // محاكاة تقدم الهدف
+  useEffect(() => {
+    setProgress(78);
+  }, []);
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('admin.dashboard')}</h2>
-          <p className="text-muted-foreground">
-            {t('admin.dashboardDescription')}
-          </p>
-        </div>
-        <Button className="button-gradient">
-          {t('admin.downloadReport')}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">لوحة التحكم</h1>
+        <Button variant="outline" size="sm">
+          <Clock className="h-4 w-4 mr-2" />
+          تحديث البيانات
         </Button>
       </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t(`admin.${card.title}`)}
-              </CardTitle>
-              <div className="rounded-full bg-muted/50 p-2">
-                {card.icon}
+      
+      {/* إحصائيات سريعة */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsData.map((stat, index) => (
+          <Card key={index}>
+            <CardContent className="p-4 flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{stat.title}</p>
+                <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+                <div className={`flex items-center mt-1 ${stat.increasing ? 'text-green-500' : 'text-red-500'}`}>
+                  {stat.increasing ? <ArrowUp className="h-4 w-4 mr-1" /> : <ArrowDown className="h-4 w-4 mr-1" />}
+                  <span>{stat.change}%</span>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <div className="flex items-center pt-1">
-                {card.changeType === 'positive' ? (
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                ) : (
-                  <ArrowDown className="h-3 w-3 text-red-500 mr-1" />
-                )}
-                <p className={`text-xs ${
-                  card.changeType === 'positive' ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {card.change} {t('admin.fromLastMonth')}
-                </p>
+              <div className={`p-3 rounded-full ${stat.color}`}>
+                <stat.icon className="h-5 w-5 text-white" />
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart Section */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('admin.salesOverview')}</CardTitle>
-            <CardDescription>{t('admin.last30Days')}</CardDescription>
+      
+      {/* الرسوم البيانية */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* رسم بياني للإيرادات */}
+        <Card className="col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span>الإيرادات الشهرية</span>
+              <TrendingUp className="h-5 w-5 text-green-500" />
+            </CardTitle>
+            <div className="text-2xl font-bold">3,256 π</div>
+            <div className="text-xs text-muted-foreground">إجمالي الإيرادات لعام 2025</div>
           </CardHeader>
-          <CardContent className="pl-2">
-            {/* Chart placeholder */}
-            <div className="h-80 bg-muted/20 rounded-md flex items-center justify-center">
-              <p className="text-muted-foreground">{t('admin.salesChartPlaceholder')}</p>
-            </div>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={revenueData}
+                margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`π ${value}`, 'الإيرادات']} />
+                <Area type="monotone" dataKey="revenue" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorRevenue)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>{t('admin.recentOrders')}</CardTitle>
-            <Link to="/admin/orders" className="inline-flex items-center text-sm font-medium text-pi hover:underline">
-              {t('admin.viewAll')}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium">{order.customer}</p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <span>{order.restaurant}</span>
-                      <span className="mx-1">•</span>
-                      <span>{order.id}</span>
+        
+        {/* إحصائيات الطلبات */}
+        <div className="grid grid-cols-1 gap-6">
+          {/* مصادر الطلبات */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">مصادر الطلبات</CardTitle>
+            </CardHeader>
+            <CardContent className="h-40 flex items-center">
+              <div className="w-1/2 h-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={orderSourceData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={65}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {orderSourceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="w-1/2">
+                <div className="space-y-2">
+                  {orderSourceData.map((entry, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="h-3 w-3 mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                      <div className="flex justify-between w-full">
+                        <span>{entry.name}</span>
+                        <span>{entry.value}%</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{`π ${order.total.toFixed(2)}`}</p>
-                    <span className={`inline-block text-xs rounded-full px-2 py-0.5 ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                      order.status === 'processing' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
-                      'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                    }`}>
-                      {t(`admin.${order.status}`)}
-                    </span>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Additional Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Most Popular Restaurants */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.popularRestaurants')}</CardTitle>
-            <CardDescription>{t('admin.topPerformingRestaurants')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-muted/20 rounded-md p-4">
-                <p className="text-muted-foreground text-center my-6">{t('admin.popularRestaurantsPlaceholder')}</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Users */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.recentUsers')}</CardTitle>
-            <CardDescription>{t('admin.newlyRegisteredUsers')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-muted/20 rounded-md p-4">
-                <p className="text-muted-foreground text-center my-6">{t('admin.recentUsersPlaceholder')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* الهدف الشهري */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">الهدف الشهري</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between mb-2">
+                <span className="text-sm">3,256 π</span>
+                <span className="text-sm">4,000 π</span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <Progress value={progress} className="h-2" />
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-muted-foreground">المحقق</span>
+                <span className="text-xs text-muted-foreground">الهدف</span>
+              </div>
+              <div className="mt-4 text-center">
+                <span className="text-sm font-medium">
+                  التقدم: {progress}% <span className="text-muted-foreground">من الهدف الشهري</span>
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Quick Links */}
-      <SectionTitle title={t('admin.quickActions')} />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
-          <Link to="/admin/users">
-            <Users className="h-6 w-6 mb-2" />
-            <span>{t('admin.manageUsers')}</span>
-          </Link>
-        </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
-          <Link to="/admin/restaurants">
-            <Utensils className="h-6 w-6 mb-2" />
-            <span>{t('admin.manageRestaurants')}</span>
-          </Link>
-        </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
-          <Link to="/admin/orders">
-            <ShoppingBag className="h-6 w-6 mb-2" />
-            <span>{t('admin.manageOrders')}</span>
-          </Link>
-        </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
-          <Link to="/admin/payments">
-            <Wallet className="h-6 w-6 mb-2" />
-            <span>{t('admin.managePayments')}</span>
-          </Link>
-        </Button>
-      </div>
+      
+      {/* أداء المطاعم مقابل المنزلي */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">أداء المطاعم مقابل الطعام المنزلي</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={performanceData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="مطاعم" fill="#8B5CF6" />
+              <Bar dataKey="منزلي" fill="#F97316" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      
+      {/* آخر الطلبات */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center justify-between">
+            <span>آخر الطلبات</span>
+            <Link to="/admin/orders">
+              <Button variant="ghost" size="sm" className="text-primary">
+                عرض الكل
+                <ArrowRight className="h-4 w-4 mr-1" />
+              </Button>
+            </Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-right font-medium py-3 px-2">رقم الطلب</th>
+                  <th className="text-right font-medium py-3 px-2">المستخدم</th>
+                  <th className="text-right font-medium py-3 px-2">المبلغ</th>
+                  <th className="text-right font-medium py-3 px-2">الحالة</th>
+                  <th className="text-right font-medium py-3 px-2">الوقت</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((order, index) => (
+                  <tr key={index} className="border-b last:border-b-0 hover:bg-muted/50">
+                    <td className="py-3 px-2 font-medium">{order.id}</td>
+                    <td className="py-3 px-2">{order.user}</td>
+                    <td className="py-3 px-2">{order.amount}</td>
+                    <td className="py-3 px-2">
+                      <Badge className={`
+                        ${order.status === 'تم التسليم' ? 'bg-green-500' : 
+                          order.status === 'جاري التوصيل' ? 'bg-blue-500' : 
+                          'bg-orange'}
+                      `}>
+                        {order.status}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-2 text-muted-foreground">{order.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

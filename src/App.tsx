@@ -33,6 +33,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminStatistics from "./pages/admin/AdminStatistics";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 // Configure the QueryClient with Pi Network styling
 const queryClient = new QueryClient({
@@ -68,11 +69,15 @@ const AppContent = () => {
           <Route path="/pi-payment" element={<PiPaymentDemo />} />
           <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           
-          {/* Admin Dashboard Routes */}
+          {/* صفحة تسجيل دخول المسؤول */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          {/* مسارات لوحة الإدارة */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="restaurants" element={<AdminRestaurants />} />
+            <Route path="home-providers" element={<AdminRestaurants />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="statistics" element={<AdminStatistics />} />
