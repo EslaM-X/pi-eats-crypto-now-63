@@ -26,10 +26,32 @@ export interface PiSDK {
   createPayment: (paymentData: any, onSuccess: (payment: any) => void, onError?: (error: Error) => void) => void;
   openPaymentFlow: (paymentId: string, onSuccess: (payment: any) => void, onError?: (error: Error) => void) => void;
   getQRCodeContent: (params: any) => string;
+  currentUser?: () => Promise<any>;
 }
 
+// Helper function to authenticate with Pi Network
+export const authenticateWithPi = (): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const Pi = window.Pi;
+    if (!Pi) {
+      reject(new Error('Pi SDK not found'));
+      return;
+    }
+
+    Pi.authenticate(
+      ['payments', 'username'],
+      (authData: any) => {
+        resolve(authData);
+      },
+      (error: Error) => {
+        reject(error);
+      }
+    );
+  });
+};
+
 // Initialize the Pi Network SDK
-export const initializePiNetwork = (): PiSDK | undefined => {
+export const initializePiSDK = (): PiSDK | undefined => {
   // Check if running in browser environment
   if (typeof window === 'undefined') {
     console.error('Pi Network SDK can only be initialized in browser environment');
@@ -38,15 +60,8 @@ export const initializePiNetwork = (): PiSDK | undefined => {
 
   // Check if the Pi SDK is available
   if (window.Pi) {
-    try {
-      // Configure the Pi SDK
-      window.Pi.init({ version: "2.0", sandbox: false });
-      console.info('Pi SDK initialized successfully');
-      return window.Pi;
-    } catch (error) {
-      console.error('Failed to initialize Pi SDK:', error);
-      return undefined;
-    }
+    console.info('Pi SDK initialized successfully');
+    return window.Pi;
   } else {
     console.error('Pi SDK not found. Make sure to include the Pi SDK script in your HTML.');
     return undefined;

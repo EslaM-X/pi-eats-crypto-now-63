@@ -17,7 +17,7 @@ interface AppProviderProps {
 
 const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
-    <ThemeProvider defaultTheme="light">
+    <ThemeProvider>
       <LanguageProvider>
         <PiPriceProvider>
           <PiAuthProvider>
