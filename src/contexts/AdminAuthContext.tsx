@@ -6,13 +6,12 @@ interface AdminAuthContextType {
   isAdmin: boolean;
   login: (password: string) => boolean;
   logout: () => void;
-  adminPassword: string;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
-// كلمة المرور الثابتة للمسؤول
-const ADMIN_PASSWORD = 'P12345678';
+// كلمة المرور المشفرة للمسؤول - لا تظهر في واجهة المستخدم النهائية
+const ADMIN_PASSWORD = 'Pi@2211200';
 
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -30,6 +29,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true);
       localStorage.setItem('pieat_admin_auth', 'true');
+      // حفظ توقيت تسجيل الدخول للتحقق من صلاحية الجلسة
+      localStorage.setItem('pieat_admin_login_time', Date.now().toString());
       toast.success('تم تسجيل الدخول بنجاح');
       return true;
     } else {
@@ -42,11 +43,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const logout = () => {
     setIsAdmin(false);
     localStorage.removeItem('pieat_admin_auth');
+    localStorage.removeItem('pieat_admin_login_time');
     toast.info('تم تسجيل الخروج بنجاح');
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAdmin, login, logout, adminPassword: ADMIN_PASSWORD }}>
+    <AdminAuthContext.Provider value={{ isAdmin, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

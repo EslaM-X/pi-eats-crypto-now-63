@@ -10,6 +10,7 @@ import { OrdersProvider } from "./OrdersContext";
 import { HomeFoodProvider } from "./homefood/HomeFoodContext";
 import { PaymentProvider } from "./PaymentContext";
 import { MiningProvider } from "./mining/MiningContext";
+import { AdminAuthProvider } from "./AdminAuthContext";
 
 interface AppProviderProps {
   children: React.ReactNode;
@@ -27,7 +28,9 @@ const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                   <OrdersProvider>
                     <HomeFoodProvider>
                       <MiningProvider>
-                        {children}
+                        <AdminAuthProvider>
+                          {children}
+                        </AdminAuthProvider>
                       </MiningProvider>
                     </HomeFoodProvider>
                   </OrdersProvider>

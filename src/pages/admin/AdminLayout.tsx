@@ -1,13 +1,51 @@
 
 import React, { useEffect } from 'react';
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { toast } from 'sonner';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
 
+// مدة صلاحية الجلسة (4 ساعات)
+const SESSION_TIMEOUT = 4 * 60 * 60 * 1000;
+
 const AdminLayout: React.FC = () => {
-  const { isAdmin } = useAdminAuth();
+  const { isAdmin, logout } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // التحقق من انتهاء صلاحية الجلسة
+  useEffect(() => {
+    const checkSessionValidity = () => {
+      const loginTime = localStorage.getItem('pieat_admin_login_time');
+      if (loginTime) {
+        const elapsed = Date.now() - Number(loginTime);
+        if (elapsed > SESSION_TIMEOUT) {
+          toast.warning('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى');
+          logout();
+          navigate('/admin/login');
+        }
+      }
+    };
+
+    // التحقق عند تحميل الصفحة وعند تغيير المسار
+    checkSessionValidity();
+    
+    // تحديث وقت الجلسة عند كل تفاعل مع الصفحة
+    const updateSessionTime = () => {
+      if (isAdmin) {
+        localStorage.setItem('pieat_admin_login_time', Date.now().toString());
+      }
+    };
+
+    window.addEventListener('click', updateSessionTime);
+    window.addEventListener('keypress', updateSessionTime);
+    
+    return () => {
+      window.removeEventListener('click', updateSessionTime);
+      window.removeEventListener('keypress', updateSessionTime);
+    };
+  }, [isAdmin, logout, navigate, location.pathname]);
 
   // إذا لم يكن المستخدم مسؤولاً، قم بتوجيهه إلى صفحة تسجيل الدخول
   if (!isAdmin) {
