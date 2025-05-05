@@ -1,15 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { usePiAuth } from './PiAuthContext';
-import { 
-  createPayment, 
-  completePayment, 
-  cancelPayment, 
-  getPaymentStatus 
-} from '@/config/piNetwork';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
-import { useWallet } from './WalletContext';
+import piNetworkService from '@/services/piNetworkService';
 
+// Define the context interface
 interface PaymentContextType {
   isProcessingPayment: boolean;
   currentPaymentId: string | null;
@@ -18,134 +12,112 @@ interface PaymentContextType {
   checkPaymentStatus: (paymentId: string) => Promise<any>;
 }
 
+// Create the context with default values
 const PaymentContext = createContext<PaymentContextType>({
   isProcessingPayment: false,
   currentPaymentId: null,
   payWithPi: async () => false,
   cancelPiPayment: async () => false,
-  checkPaymentStatus: async () => null
+  checkPaymentStatus: async () => null,
 });
 
-export const usePayment = () => useContext(PaymentContext);
+// Define the props interface for the provider
+interface PaymentProviderProps {
+  children: ReactNode;
+}
 
-export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, login } = usePiAuth();
-  const { addTransaction } = useWallet();
+export const PaymentProvider: React.FC<PaymentProviderProps> = ({ children }) => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null);
-  
-  // Clear any stale payment IDs on component mount
+
+  // Initialize Pi Network SDK on component mount
   useEffect(() => {
-    setCurrentPaymentId(null);
+    const initPi = () => {
+      const initialized = piNetworkService.initSDK();
+      if (!initialized) {
+        console.error('Failed to initialize Pi Network SDK');
+      }
+    };
+
+    initPi();
   }, []);
-  
+
+  /**
+   * Pay with Pi
+   * @param amount The amount in Pi to pay
+   * @param memo A description of what the payment is for
+   * @returns A promise that resolves to a boolean indicating success
+   */
   const payWithPi = async (amount: number, memo: string): Promise<boolean> => {
-    // If user is not logged in, try to authenticate first
-    if (!user) {
-      const authResult = await login();
-      if (!authResult) {
-        toast.error('يجب تسجيل الدخول أولاً للدفع باستخدام Pi');
-        return false;
-      }
-    }
-    
-    setIsProcessingPayment(true);
-    
     try {
-      // Create the payment
-      const paymentData = await createPayment(amount, memo);
-      
-      if (!paymentData) {
-        toast.error('فشل في إنشاء عملية الدفع');
-        return false;
-      }
-      
-      // Get payment ID based on the structure returned from Pi SDK
-      const paymentId = typeof paymentData === 'object' ? 
-        (paymentData as any).identifier || (paymentData as any).paymentId || (paymentData as any)._id : 
-        paymentData;
-        
-      if (!paymentId) {
-        toast.error('لم يتم الحصول على رقم تعريف للدفع');
-        return false;
-      }
-      
-      // Store current payment ID
-      setCurrentPaymentId(paymentId);
-      
+      setIsProcessingPayment(true);
+
+      // Create a payment
+      const payment = await piNetworkService.createPayment(amount, memo);
+      setCurrentPaymentId(payment.identifier);
+
       // Complete the payment
-      const completedPayment = await completePayment(paymentId);
-      
-      if (completedPayment && (completedPayment as any).status === 'COMPLETED') {
-        // Add transaction to wallet history
-        addTransaction({
-          amount,
-          type: 'send',
-          status: 'completed',
-          description: `Payment: ${memo}`
-        });
-        
-        toast.success('تمت عملية الدفع بنجاح!');
-        setCurrentPaymentId(null);
+      const completedPayment = await piNetworkService.completePayment(payment.identifier);
+
+      if (completedPayment.status === 'COMPLETED') {
+        toast.success('Payment successful!');
         return true;
       } else {
-        toast.error('فشلت عملية الدفع');
+        toast.error(`Payment ${completedPayment.status.toLowerCase()}`);
         return false;
       }
-    } catch (error) {
-      console.error('Error processing Pi payment:', error);
-      toast.error('حدث خطأ أثناء معالجة الدفع');
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast.error(`Payment failed: ${error.message}`);
       return false;
     } finally {
       setIsProcessingPayment(false);
     }
   };
-  
+
+  /**
+   * Cancel a Pi payment
+   * @param paymentId The ID of the payment to cancel
+   * @returns A promise that resolves to a boolean indicating success
+   */
   const cancelPiPayment = async (paymentId: string): Promise<boolean> => {
-    if (!paymentId) {
-      toast.error('لا يوجد معرف دفع للإلغاء');
-      return false;
-    }
-    
     try {
-      const result = await cancelPayment(paymentId);
-      if (result) {
-        toast.success('تم إلغاء عملية الدفع');
-        setCurrentPaymentId(null);
-        return true;
-      } else {
-        toast.error('فشل في إلغاء عملية الدفع');
-        return false;
-      }
+      await piNetworkService.cancelPayment(paymentId);
+      setCurrentPaymentId(null);
+      return true;
     } catch (error) {
-      console.error('Error cancelling payment:', error);
-      toast.error('حدث خطأ أثناء إلغاء الدفع');
+      console.error('Cancel payment error:', error);
       return false;
     }
   };
-  
+
+  /**
+   * Check the status of a payment
+   * @param paymentId The ID of the payment to check
+   * @returns A promise that resolves to the payment data
+   */
   const checkPaymentStatus = async (paymentId: string): Promise<any> => {
-    if (!paymentId) return null;
-    
     try {
-      return await getPaymentStatus(paymentId);
+      return await piNetworkService.fetchPayment(paymentId);
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      console.error('Check payment status error:', error);
       return null;
     }
   };
-  
+
   return (
-    <PaymentContext.Provider value={{ 
-      isProcessingPayment,
-      currentPaymentId,
-      payWithPi,
-      cancelPiPayment,
-      checkPaymentStatus
-    }}>
+    <PaymentContext.Provider
+      value={{
+        isProcessingPayment,
+        currentPaymentId,
+        payWithPi,
+        cancelPiPayment,
+        checkPaymentStatus,
+      }}
+    >
       {children}
     </PaymentContext.Provider>
   );
 };
 
-export default PaymentProvider;
+export const usePayment = () => useContext(PaymentContext);

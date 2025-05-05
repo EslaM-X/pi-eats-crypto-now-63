@@ -1,37 +1,41 @@
 
-import React from 'react';
-import { PiAuthProvider } from './PiAuthContext';
-import { LanguageProvider } from './LanguageContext';
-import { ThemeProvider } from './ThemeContext';
-import { PiPriceProvider } from './PiPriceContext';
-import { CartProvider } from './CartContext';
-import { PaymentProvider } from './PaymentContext';
-import { WalletProvider } from './wallet/WalletContext';
-import { OrdersProvider } from './OrdersContext';
-import { HomeFoodProvider } from './homefood/HomeFoodContext';
-import { AdminAuthProvider } from './AdminAuthContext';
+import React from "react";
+import { LanguageProvider } from "./LanguageContext";
+import { ThemeProvider } from "./ThemeContext";
+import { PiAuthProvider } from "./PiAuthContext";
+import { PiPriceProvider } from "./PiPriceContext";
+import { WalletProvider } from "./WalletContext";
+import { CartProvider } from "./CartContext";
+import { OrdersProvider } from "./OrdersContext";
+import { HomeFoodProvider } from "./homefood/HomeFoodContext";
+import { PaymentProvider } from "./PaymentContext";
+import { MiningProvider } from "./mining/MiningContext";
 
-const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AppProviderProps {
+  children: React.ReactNode;
+}
+
+const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light">
       <LanguageProvider>
-        <PiAuthProvider>
-          <PiPriceProvider>
-            <WalletProvider>
-              <HomeFoodProvider>
+        <PiPriceProvider>
+          <PiAuthProvider>
+            <PaymentProvider>
+              <WalletProvider>
                 <CartProvider>
-                  <PaymentProvider>
-                    <OrdersProvider>
-                      <AdminAuthProvider>
+                  <OrdersProvider>
+                    <HomeFoodProvider>
+                      <MiningProvider>
                         {children}
-                      </AdminAuthProvider>
-                    </OrdersProvider>
-                  </PaymentProvider>
+                      </MiningProvider>
+                    </HomeFoodProvider>
+                  </OrdersProvider>
                 </CartProvider>
-              </HomeFoodProvider>
-            </WalletProvider>
-          </PiPriceProvider>
-        </PiAuthProvider>
+              </WalletProvider>
+            </PaymentProvider>
+          </PiAuthProvider>
+        </PiPriceProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
