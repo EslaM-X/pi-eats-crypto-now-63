@@ -10,7 +10,7 @@ import {
   PI_NETWORK_API_KEY, 
   PI_NETWORK_API_BASE_URL, 
   PI_NETWORK_ENDPOINTS,
-  initializePiNetwork,
+  initializePiSDK,
   PiSDK
 } from '@/config/piNetwork';
 
@@ -22,7 +22,7 @@ class PiNetworkService {
   constructor() {
     this.apiKey = PI_NETWORK_API_KEY;
     this.baseUrl = PI_NETWORK_API_BASE_URL;
-    this.sdk = initializePiNetwork();
+    this.sdk = initializePiSDK();
   }
 
   /**
@@ -31,7 +31,7 @@ class PiNetworkService {
    */
   public initSDK(): boolean {
     if (!this.sdk) {
-      this.sdk = initializePiNetwork();
+      this.sdk = initializePiSDK();
     }
     return !!this.sdk;
   }
