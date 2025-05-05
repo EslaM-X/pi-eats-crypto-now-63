@@ -9,7 +9,6 @@ import { PaymentProvider } from './PaymentContext';
 import { WalletProvider } from './wallet/WalletContext';
 import { OrdersProvider } from './OrdersContext';
 import { HomeFoodProvider } from './homefood/HomeFoodContext';
-import { MiningProvider } from './mining/MiningContext';
 import { AdminAuthProvider } from './AdminAuthContext';
 
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -23,11 +22,9 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <CartProvider>
                   <PaymentProvider>
                     <OrdersProvider>
-                      <MiningProvider>
-                        <AdminAuthProvider>
-                          {children}
-                        </AdminAuthProvider>
-                      </MiningProvider>
+                      <AdminAuthProvider>
+                        {children}
+                      </AdminAuthProvider>
                     </OrdersProvider>
                   </PaymentProvider>
                 </CartProvider>
